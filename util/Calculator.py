@@ -3,7 +3,7 @@ from conversions import from_decimal, to_decimal
 
 class Calculator:
     def __init__(self) -> None:
-        self.input = ""
+        self.input = "0"
         self.operation = ""
         self.number_system_mode: int
 
@@ -24,11 +24,11 @@ class Calculator:
         self.__create_buttons()
         
 
-    def run(self):
+    def run(self) -> None:
         self.root.mainloop()
 
 
-    def __create_buttons(self):
+    def __create_buttons(self) -> None:
         row = 2
         column = 0
         counter = 0
@@ -97,24 +97,23 @@ class Calculator:
         self.button_frame.pack(fill="x")
 
 
-    def __shortcut(self, event):
+    def __shortcut(self, event) -> None:
         if event.keysym == "Escape":
             self.root.quit()
 
 
-    def __change_operation(self, operation: chr):
+    def __change_operation(self, operation: chr) -> None:
         self.operation = operation
         print(self.operation)
 
 
-    def __get_result(self):
+    def __get_result(self) -> None:
         print("equals")
 
 
-    def __change_number_system(self, mode: int):
+    def __change_number_system(self, mode: int) -> None:
         prev_number_system = self.number_system_mode
         limit: int
-        temp_conv = None
         final_conv = None
         modes = {
             2: "Bin",
@@ -123,8 +122,26 @@ class Calculator:
             16: "Hex"
         }
 
+        limit = mode
+        accepted_range = list(range(0, limit))
         self.number_system_mode = mode
-        print(self.number_system_mode)
+        self.mode_label.config(text="Mode: " + modes[self.number_system_mode])
+        
+        if self.input != "0":
+            final_conv = self.__calculate_conversion(prev_number_system=prev_number_system)
+            self.input = str(final_conv)
+            self.display_label.config(text=self.input)
+
+        for i in range(0, 16):
+            if i in accepted_range:
+                self.buttons[i].config(state="active")
+            else:
+                self.buttons[i].config(state="disabled")
+
+
+    def __calculate_conversion(self, prev_number_system: int) -> int or str:
+        temp_conv = None
+        final_conv = None
 
         if prev_number_system == 2:
             temp_conv = to_decimal.binary_to_decimal(int(self.input))
@@ -144,36 +161,24 @@ class Calculator:
         else:
             final_conv = from_decimal.decimal_to_hexadecimal(temp_conv)
 
-        limit = self.number_system_mode
-        accepted_range = list(range(0, limit))
-        self.mode_label.config(text="Mode: " + modes[self.number_system_mode])
-
-        self.input = str(final_conv)
-        self.display_label.config(text=self.input)
-
-        for i in range(0, 16):
-            if i in accepted_range:
-                self.buttons[i].config(state="active")
-            else:
-                self.buttons[i].config(state="disabled")
+        return final_conv
 
 
-    def __number_click(self, number: chr):
+    def __number_click(self, number: chr) -> None:
         if self.input == '0':
             self.input = number
         else:
             self.input += number
 
         self.display_label.config(text=self.input)
-        print(number)
 
 
-    def __clear_buffer(self):
+    def __clear_buffer(self) -> None:
         self.input = "0"
         self.display_label.config(text=self.input)
 
 
-    def __erase(self):
+    def __erase(self) -> None:
         self.input = self.input[:-1]
 
         if self.input == '':
