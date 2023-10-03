@@ -3,8 +3,9 @@ from conversions import from_decimal, to_decimal
 
 class Calculator:
     def __init__(self) -> None:
+        self.prev_value = None
         self.input = "0"
-        self.operation = ""
+        self.operation = None
         self.number_system_mode: int
 
         self.root = tk.Tk()
@@ -15,6 +16,8 @@ class Calculator:
 
         self.mode_label= tk.Label(self.root, text="Mode: ", font=('Arial', 11))
         self.mode_label.pack(padx=10)
+        self.result_label = tk.Label(self.root, text="", font=('Arial', 12))
+        self.result_label.pack(pady=5)
         self.display_label = tk.Label(self.root, text="0", font=('Arial', 18))
         self.display_label.pack(padx=10, pady=20)
 
@@ -44,7 +47,7 @@ class Calculator:
         oct_btn = tk.Button(self.button_frame, text="OCT", font=('Arial', 18), width="10", command=lambda: self.__change_number_system(8))
         hex_btn = tk.Button(self.button_frame, text="HEX", font=('Arial', 18), width="10", command=lambda: self.__change_number_system(16))
         clear_btn = tk.Button(self.button_frame, text="Clear", font=('Arial', 18), width="10", command=self.__clear_buffer)
-        backspace_btn = tk.Button(self.button_frame, text="<-", font=('Arial', 18), width="10", command=self.__erase)
+        backspace_btn = tk.Button(self.button_frame, text="DEL", font=('Arial', 18), width="10", command=self.__erase)
 
         dec_btn.grid(row=0, column=0, sticky="we")
         bin_btn.grid(row=0, column=1, sticky="we")
@@ -104,11 +107,34 @@ class Calculator:
 
     def __change_operation(self, operation: chr) -> None:
         self.operation = operation
-        print(self.operation)
+        self.prev_value = self.input
+        self.input = "0"
+        self.result_label.config(text=self.prev_value)
+        self.display_label.config(text=self.input)
 
 
     def __get_result(self) -> None:
-        print("equals")
+        if self.operation is not None and self.prev_value is not None and self.input is not None:
+            prev_value = int(self.prev_value, self.number_system_mode)
+            current_value = int(self.input, self.number_system_mode)
+            final_result = None
+            result = None
+
+            if self.operation == "+":
+                result = prev_value + current_value
+            elif self.operation == "-":
+                result = prev_value - current_value
+            elif self.operation == "*":
+                result = prev_value * current_value
+            else:
+                result = prev_value / current_value
+            
+            result = int(result)
+            final_result = self.__calculate_conversion(10, str(result))
+
+            self.input = str(final_result)
+            self.result_label.config(text=str(final_result))
+            self.display_label.config(text=str(final_result))
 
 
     def __change_number_system(self, mode: int) -> None:
@@ -139,18 +165,21 @@ class Calculator:
                 self.buttons[i].config(state="disabled")
 
 
-    def __calculate_conversion(self, prev_number_system: int) -> int or str:
+    def __calculate_conversion(self, prev_number_system: int, value: str =None) -> int or str:
         temp_conv = None
         final_conv = None
 
+        if value is None:
+            value = self.input
+
         if prev_number_system == 2:
-            temp_conv = to_decimal.binary_to_decimal(int(self.input))
+            temp_conv = to_decimal.binary_to_decimal(int(value))
         elif prev_number_system == 8:
-            temp_conv = to_decimal.octal_to_decimal(int(self.input))
+            temp_conv = to_decimal.octal_to_decimal(int(value))
         elif prev_number_system == 10:
-            temp_conv = int(self.input)
+            temp_conv = int(value)
         else:
-            temp_conv = to_decimal.hexadecimal_to_decimal(self.input)
+            temp_conv = to_decimal.hexadecimal_to_decimal(value)
         
         if self.number_system_mode == 2:
             final_conv = from_decimal.decimal_to_binary(temp_conv)
@@ -175,7 +204,10 @@ class Calculator:
 
     def __clear_buffer(self) -> None:
         self.input = "0"
+        self.prev_value = None
+        self.operation = None
         self.display_label.config(text=self.input)
+        self.result_label.config(text="")
 
 
     def __erase(self) -> None:
